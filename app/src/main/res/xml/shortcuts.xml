@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="recent_actions"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_recent"
+        android:shortcutShortLabel="@string/shortcut_recent_short"
+        android:shortcutLongLabel="@string/shortcut_recent_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="nemo://recent"
+            android:targetPackage="com.aistudio.nemoai.xkqmtz"
+            android:targetClass="com.example.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="voice_command"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_mic"
+        android:shortcutShortLabel="@string/shortcut_voice_short"
+        android:shortcutLongLabel="@string/shortcut_voice_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="nemo://voice"
+            android:targetPackage="com.aistudio.nemoai.xkqmtz"
+            android:targetClass="com.example.MainActivity" />
+    </shortcut>
+    <capability android:name="actions.intent.OPEN_APP_FEATURE">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.aistudio.nemoai.xkqmtz"
+            android:targetClass="com.example.MainActivity">
+            <parameter
+                android:name="feature"
+                android:key="feature" />
+        </intent>
+    </capability>
+</shortcuts>

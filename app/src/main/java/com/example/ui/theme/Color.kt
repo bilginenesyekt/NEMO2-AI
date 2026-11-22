@@ -1,0 +1,31 @@
+package com.example.ui.theme
+
+import androidx.compose.ui.graphics.Color
+
+// Obsidian Bioluminescence Palette (Dark)
+val AbyssalNavy = Color(0xFF070B14)
+val ObsidianSurface = Color(0xFF0F172A)
+val ObsidianSurfaceVariant = Color(0xFF17233B)
+val ObsidianSurfaceHighest = Color(0xFF1E2D4A)
+val ElectricCyan = Color(0xFF00E5FF)
+val CyanMuted = Color(0xFF00B8D4)
+val DeepCyanContainer = Color(0xFF003847)
+val BioluminescentTeal = Color(0xFF2DD4BF)
+val CoralPulse = Color(0xFFFF6B4A)
+val CoralContainer = Color(0xFF4A1E15)
+val IceWhite = Color(0xFFF1F5F9)
+val SlateText = Color(0xFF94A3B8)
+val SubtleBorderDark = Color(0xFF243454)
+
+// Alabaster Ocean Palette (Light)
+val AlabasterBg = Color(0xFFF4F8FB)
+val CrispWhite = Color(0xFFFFFFFF)
+val MistSurfaceVariant = Color(0xFFE6EFF6)
+val DeepOceanCyan = Color(0xFF007791)
+val DeepTeal = Color(0xFF0F766E)
+val LightCyanContainer = Color(0xFFD0F4FC)
+val CoralAccentLight = Color(0xFFD94A2B)
+val LightCoralContainer = Color(0xFFFFE5DF)
+val InkDark = Color(0xFF0F172A)
+val SlateInk = Color(0xFF475569)
+val SubtleBorderLight = Color(0xFFCBD9E6)

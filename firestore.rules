@@ -1,0 +1,208 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net: default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.displayName is string && data.displayName.size() <= 100 &&
+             data.preferredLanguage in ['tr', 'en', 'de', 'fr', 'es', 'ar'] &&
+             data.themeMode in ['SYSTEM', 'DARK', 'LIGHT'] &&
+             data.responseTone in ['FRIENDLY', 'PROFESSIONAL', 'CONCISE', 'CREATIVE'] &&
+             data.fastModeEnabled is bool &&
+             data.autoSpeakEnabled is bool &&
+             data.preferredEngine in ['AUTO', 'CHATGPT', 'NEMO_CLOUD'] &&
+             (!('encryptedPersona' in data) || (data.encryptedPersona is string && data.encryptedPersona.size() <= 4000)) &&
+             (!('personaIv' in data) || (data.personaIv is string && data.personaIv.size() <= 64)) &&
+             (!('e2eeSalt' in data) || (data.e2eeSalt is string && data.e2eeSalt.size() <= 128)) &&
+             (!('e2eeVerifier' in data) || (data.e2eeVerifier is string && data.e2eeVerifier.size() <= 256)) &&
+             (!('e2eeVerifierIv' in data) || (data.e2eeVerifierIv is string && data.e2eeVerifierIv.size() <= 64)) &&
+             (!('lastBackupAt' in data) || (data.lastBackupAt is timestamp && data.lastBackupAt <= request.time)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidConversation(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.encryptedTitle is string && data.encryptedTitle.size() >= 1 && data.encryptedTitle.size() <= 2000 &&
+             data.titleIv is string && data.titleIv.size() >= 1 && data.titleIv.size() <= 64 &&
+             data.encryptedPreview is string && data.encryptedPreview.size() <= 2000 &&
+             data.previewIv is string && data.previewIv.size() >= 1 && data.previewIv.size() <= 64 &&
+             data.languageCode is string && data.languageCode.size() >= 2 && data.languageCode.size() <= 10 &&
+             data.engineUsed is string && data.engineUsed.size() >= 1 && data.engineUsed.size() <= 40 &&
+             data.messageCount is int && data.messageCount >= 0 && data.messageCount <= 50000 &&
+             data.pinned is bool &&
+             data.archived is bool &&
+             data.encryptionVersion is int && data.encryptionVersion >= 1 && data.encryptionVersion <= 10 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidEncryptedMessage(data, userId, conversationId) {
+      return data.userId is string && data.userId == userId &&
+             data.conversationId is string && data.conversationId == conversationId &&
+             data.role in ['user', 'assistant', 'system'] &&
+             data.encryptedContent is string && data.encryptedContent.size() >= 1 && data.encryptedContent.size() <= 100000 &&
+             data.iv is string && data.iv.size() >= 1 && data.iv.size() <= 64 &&
+             data.engineUsed is string && data.engineUsed.size() <= 40 &&
+             data.latencyMs is int && data.latencyMs >= 0 && data.latencyMs <= 600000 &&
+             data.voiceInitiated is bool &&
+             data.encryptionVersion is int && data.encryptionVersion >= 1 && data.encryptionVersion <= 10 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    function isValidRecentAction(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.actionType in ['CHAT', 'VOICE_COMMAND', 'BACKUP', 'WIDGET', 'PERSONALIZATION', 'LANGUAGE'] &&
+             data.encryptedTitle is string && data.encryptedTitle.size() >= 1 && data.encryptedTitle.size() <= 1000 &&
+             data.titleIv is string && data.titleIv.size() >= 1 && data.titleIv.size() <= 64 &&
+             data.encryptedDetail is string && data.encryptedDetail.size() <= 2000 &&
+             data.detailIv is string && data.detailIv.size() >= 1 && data.detailIv.size() <= 64 &&
+             (!('targetConversationId' in data) || (data.targetConversationId is string && data.targetConversationId.size() <= 128)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'displayName', 'preferredLanguage', 'themeMode',
+                         'responseTone', 'fastModeEnabled', 'autoSpeakEnabled',
+                         'preferredEngine', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'displayName', 'preferredLanguage', 'themeMode',
+                         'responseTone', 'fastModeEnabled', 'autoSpeakEnabled',
+                         'preferredEngine', 'encryptedPersona', 'personaIv',
+                         'e2eeSalt', 'e2eeVerifier', 'e2eeVerifierIv',
+                         'lastBackupAt', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidUserProfile(incoming(), userId);
+
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidUserProfile(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       (
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'displayName', 'preferredLanguage', 'themeMode', 'responseTone',
+                           'fastModeEnabled', 'autoSpeakEnabled', 'preferredEngine',
+                           'encryptedPersona', 'personaIv', 'updatedAt'
+                         ]) ||
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'e2eeSalt', 'e2eeVerifier', 'e2eeVerifierIv', 'lastBackupAt', 'updatedAt'
+                         ]) ||
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'lastBackupAt', 'updatedAt'
+                         ])
+                       );
+
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      match /conversations/{conversationId} {
+        allow get: if isOwner(userId) && isValidId(conversationId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(conversationId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'encryptedTitle', 'titleIv', 'encryptedPreview', 'previewIv',
+                           'languageCode', 'engineUsed', 'messageCount', 'pinned', 'archived',
+                           'encryptionVersion', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'encryptedTitle', 'titleIv', 'encryptedPreview', 'previewIv',
+                           'languageCode', 'engineUsed', 'messageCount', 'pinned', 'archived',
+                           'encryptionVersion', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidConversation(incoming(), userId);
+
+        allow update: if isOwner(userId) &&
+                         isValidId(conversationId) &&
+                         isValidConversation(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         (
+                           incoming().diff(existing()).affectedKeys().hasOnly([
+                             'encryptedTitle', 'titleIv', 'encryptedPreview', 'previewIv',
+                             'languageCode', 'engineUsed', 'messageCount', 'updatedAt'
+                           ]) ||
+                           incoming().diff(existing()).affectedKeys().hasOnly([
+                             'pinned', 'archived', 'updatedAt'
+                           ])
+                         );
+
+        allow delete: if isOwner(userId) && isValidId(conversationId);
+
+        match /messages/{messageId} {
+          allow get: if isOwner(userId) && isValidId(conversationId) && isValidId(messageId);
+          allow list: if isOwner(userId) && isValidId(conversationId);
+
+          allow create: if isOwner(userId) &&
+                           isValidId(conversationId) &&
+                           isValidId(messageId) &&
+                           incoming().keys().hasAll([
+                             'userId', 'conversationId', 'role', 'encryptedContent', 'iv',
+                             'engineUsed', 'latencyMs', 'voiceInitiated', 'encryptionVersion', 'createdAt'
+                           ]) &&
+                           incoming().keys().hasOnly([
+                             'userId', 'conversationId', 'role', 'encryptedContent', 'iv',
+                             'engineUsed', 'latencyMs', 'voiceInitiated', 'encryptionVersion', 'createdAt'
+                           ]) &&
+                           isValidEncryptedMessage(incoming(), userId, conversationId) &&
+                           exists(/databases/$(database)/documents/users/$(userId)/conversations/$(conversationId));
+
+          allow update: if false;
+          allow delete: if isOwner(userId) && isValidId(conversationId) && isValidId(messageId);
+        }
+      }
+
+      match /recentActions/{actionId} {
+        allow get: if isOwner(userId) && isValidId(actionId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(actionId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'actionType', 'encryptedTitle', 'titleIv',
+                           'encryptedDetail', 'detailIv', 'createdAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'actionType', 'encryptedTitle', 'titleIv',
+                           'encryptedDetail', 'detailIv', 'targetConversationId', 'createdAt'
+                         ]) &&
+                         isValidRecentAction(incoming(), userId);
+
+        allow update: if false;
+        allow delete: if isOwner(userId) && isValidId(actionId);
+      }
+    }
+  }
+}

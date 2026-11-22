@@ -1,0 +1,6 @@
+{
+  "name": "NEMO",
+  "description": "Kisisellestirilmis yapay zeka asistani: sesli komutlar, uctan uca sifreli bulut yedekleme, coklu dil destegi ve ozellestirilebilir ana ekran widgeti.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

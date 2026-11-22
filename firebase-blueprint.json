@@ -1,0 +1,165 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated user's NEMO preferences, personalization settings, and E2EE vault verifier metadata.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Firebase Auth UID of the owner." },
+        "displayName": { "type": "string", "description": "User display name." },
+        "preferredLanguage": {
+          "type": "string",
+          "enum": ["tr", "en", "de", "fr", "es", "ar"],
+          "description": "Preferred UI and AI response language code."
+        },
+        "themeMode": {
+          "type": "string",
+          "enum": ["SYSTEM", "DARK", "LIGHT"],
+          "description": "Theme preference."
+        },
+        "responseTone": {
+          "type": "string",
+          "enum": ["FRIENDLY", "PROFESSIONAL", "CONCISE", "CREATIVE"],
+          "description": "Personalized AI response tone."
+        },
+        "fastModeEnabled": { "type": "boolean", "description": "Whether fast low-latency AI mode is active." },
+        "autoSpeakEnabled": { "type": "boolean", "description": "Whether TTS auto-speaks AI responses." },
+        "preferredEngine": {
+          "type": "string",
+          "enum": ["AUTO", "CHATGPT", "NEMO_CLOUD"],
+          "description": "Preferred AI backend engine."
+        },
+        "encryptedPersona": { "type": "string", "description": "AES-256-GCM encrypted user persona and interests JSON." },
+        "personaIv": { "type": "string", "description": "Base64 GCM IV for encryptedPersona." },
+        "e2eeSalt": { "type": "string", "description": "Base64 salt for E2EE recovery key derivation." },
+        "e2eeVerifier": { "type": "string", "description": "AES-256-GCM encrypted verification token." },
+        "e2eeVerifierIv": { "type": "string", "description": "Base64 GCM IV for e2eeVerifier." },
+        "lastBackupAt": { "type": "string", "format": "date-time", "description": "Last cloud backup timestamp (FieldValue.serverTimestamp())." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp (FieldValue.serverTimestamp())." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp (FieldValue.serverTimestamp())." }
+      },
+      "required": [
+        "userId",
+        "displayName",
+        "preferredLanguage",
+        "themeMode",
+        "responseTone",
+        "fastModeEnabled",
+        "autoSpeakEnabled",
+        "preferredEngine",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "End-to-end encrypted chat session metadata stored in Firestore.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "encryptedTitle": { "type": "string", "description": "AES-256-GCM Base64 encrypted conversation title." },
+        "titleIv": { "type": "string", "description": "Base64 GCM IV for title." },
+        "encryptedPreview": { "type": "string", "description": "AES-256-GCM Base64 encrypted latest message preview." },
+        "previewIv": { "type": "string", "description": "Base64 GCM IV for preview." },
+        "languageCode": { "type": "string", "description": "Language code of the conversation." },
+        "engineUsed": { "type": "string", "description": "AI engine identifier used." },
+        "messageCount": { "type": "integer", "description": "Total number of messages in this conversation." },
+        "pinned": { "type": "boolean", "description": "Whether the conversation is pinned." },
+        "archived": { "type": "boolean", "description": "Whether the conversation is archived." },
+        "encryptionVersion": { "type": "integer", "description": "E2EE schema version (1)." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp (FieldValue.serverTimestamp())." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp (FieldValue.serverTimestamp())." }
+      },
+      "required": [
+        "userId",
+        "encryptedTitle",
+        "titleIv",
+        "encryptedPreview",
+        "previewIv",
+        "languageCode",
+        "engineUsed",
+        "messageCount",
+        "pinned",
+        "archived",
+        "encryptionVersion",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "EncryptedMessage": {
+      "title": "EncryptedMessage",
+      "description": "End-to-end encrypted chat message inside a conversation.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "conversationId": { "type": "string", "description": "Parent conversation document ID." },
+        "role": { "type": "string", "enum": ["user", "assistant", "system"], "description": "Message role." },
+        "encryptedContent": { "type": "string", "description": "AES-256-GCM Base64 encrypted message content." },
+        "iv": { "type": "string", "description": "Base64 GCM IV for message content." },
+        "engineUsed": { "type": "string", "description": "AI engine used to generate this message." },
+        "latencyMs": { "type": "integer", "description": "Response latency in milliseconds." },
+        "voiceInitiated": { "type": "boolean", "description": "Whether the turn was initiated by voice command." },
+        "encryptionVersion": { "type": "integer", "description": "E2EE schema version (1)." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp (FieldValue.serverTimestamp())." }
+      },
+      "required": [
+        "userId",
+        "conversationId",
+        "role",
+        "encryptedContent",
+        "iv",
+        "engineUsed",
+        "latencyMs",
+        "voiceInitiated",
+        "encryptionVersion",
+        "createdAt"
+      ]
+    },
+    "RecentAction": {
+      "title": "RecentAction",
+      "description": "Encrypted recent action entry for quick launch and widget display.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "actionType": {
+          "type": "string",
+          "enum": ["CHAT", "VOICE_COMMAND", "BACKUP", "WIDGET", "PERSONALIZATION", "LANGUAGE"],
+          "description": "Category of the recent action."
+        },
+        "encryptedTitle": { "type": "string", "description": "AES-256-GCM Base64 encrypted action title." },
+        "titleIv": { "type": "string", "description": "Base64 GCM IV for title." },
+        "encryptedDetail": { "type": "string", "description": "AES-256-GCM Base64 encrypted action detail." },
+        "detailIv": { "type": "string", "description": "Base64 GCM IV for detail." },
+        "targetConversationId": { "type": "string", "description": "Optional linked conversation ID." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp (FieldValue.serverTimestamp())." }
+      },
+      "required": [
+        "userId",
+        "actionType",
+        "encryptedTitle",
+        "titleIv",
+        "encryptedDetail",
+        "detailIv",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User preferences, personalization settings, and E2EE vault metadata."
+    },
+    "/users/{userId}/conversations/{conversationId}": {
+      "schema": { "$ref": "#/entities/Conversation" },
+      "description": "Encrypted chat conversations owned by the user."
+    },
+    "/users/{userId}/conversations/{conversationId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/EncryptedMessage" },
+      "description": "Encrypted messages within a conversation."
+    },
+    "/users/{userId}/recentActions/{actionId}": {
+      "schema": { "$ref": "#/entities/RecentAction" },
+      "description": "Encrypted recent actions for immediate display on app open and home widget."
+    }
+  }
+}

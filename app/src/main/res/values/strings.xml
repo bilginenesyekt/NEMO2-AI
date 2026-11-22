@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">NEMO</string>
+    <string name="widget_name">NEMO Asistan</string>
+    <string name="widget_description">NEMO hızlı sesli komut, sohbet ve son işlemler widgetı.</string>
+    <string name="shortcut_recent_short">Son İşlemler</string>
+    <string name="shortcut_recent_long">NEMO son işlemleri listele</string>
+    <string name="shortcut_voice_short">Sesli Komut</string>
+    <string name="shortcut_voice_long">NEMO ile sesli konuş</string>
+</resources>
